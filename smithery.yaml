@@ -1,0 +1,21 @@
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      credentials_path:
+        type: string
+        description: Path to Google OAuth client_secret.json
+      token_path:
+        type: string
+        description: Path to cached OAuth token.json
+  commandFunction:
+    |-
+    (config) => ({
+      command: "python",
+      args: ["-m", "mcp_gdocs.server"],
+      env: {
+        GDOCS_CREDENTIALS_PATH: config.credentials_path || "",
+        GDOCS_TOKEN_PATH: config.token_path || ""
+      }
+    })
