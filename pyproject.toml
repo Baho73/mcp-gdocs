@@ -5,8 +5,24 @@ build-backend = "hatchling.build"
 [project]
 name = "mcp-gdocs"
 version = "0.1.0"
-description = "MCP server for creating Google Docs from Markdown"
+description = "MCP server for creating Google Docs from Markdown with full formatting"
+readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.10"
+authors = [
+    {name = "Ivan Ponomarev", email = "7726417@teamplan.ru"},
+]
+keywords = ["mcp", "google-docs", "markdown", "ai-agent", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
 dependencies = [
     "mcp[cli]>=1.0.0",
     "python-docx>=1.0.0",
@@ -15,6 +31,11 @@ dependencies = [
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Baho73/mcp-gdocs"
+Repository = "https://github.com/Baho73/mcp-gdocs"
+Issues = "https://github.com/Baho73/mcp-gdocs/issues"
 
 [project.scripts]
 mcp-gdocs = "mcp_gdocs.server:main"
