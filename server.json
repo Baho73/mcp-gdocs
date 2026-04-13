@@ -1,0 +1,30 @@
+{
+  "$schema": "https://cdn.modelcontextprotocol.io/server.schema.json",
+  "name": "mcp-gdocs",
+  "description": "MCP server for creating Google Docs from Markdown with full formatting support. Convert Markdown to formatted Google Docs with headings, tables, lists, bold/italic. Designed for AI agents.",
+  "version": "0.1.0",
+  "tools": [
+    {
+      "name": "markdown_to_gdoc",
+      "description": "Convert Markdown text to a Google Doc with formatting (headings, bold, italic, code, tables, bullet lists). Returns document URL."
+    },
+    {
+      "name": "update_google_doc",
+      "description": "Update an existing Google Doc with new Markdown content."
+    },
+    {
+      "name": "list_google_docs",
+      "description": "Search for Google Docs in your Drive by name."
+    }
+  ],
+  "packages": {
+    "pypi": "mcp-gdocs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Baho73/mcp-gdocs"
+  },
+  "license": "MIT",
+  "runtime": "python",
+  "authors": ["Ivan Ponomarev"]
+}
