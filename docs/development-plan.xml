@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DevelopmentPlan VERSION="0.1.0">
+  <Modules>
+    <M-AUTH NAME="Auth" TYPE="UTILITY" LAYER="0" ORDER="1">
+      <contract>
+        <purpose>OAuth2 авторизация Google, кэширование токенов</purpose>
+        <inputs>
+          <param name="credentials_path" type="str | None" />
+          <param name="token_path" type="str | None" />
+        </inputs>
+        <outputs>
+          <param name="credentials" type="google.oauth2.credentials.Credentials" />
+        </outputs>
+        <errors>
+          <error code="FileNotFoundError">client_secret.json не найден</error>
+        </errors>
+        <notes>При первом запуске открывает браузер для OAuth consent. Токен кэшируется в credentials/token.json</notes>
+      </contract>
+      <interface>
+        <export-get_credentials PURPOSE="Получить валидные Google API credentials" />
+      </interface>
+      <depends>none</depends>
+    </M-AUTH>
+
+    <M-CONVERTER NAME="Converter" TYPE="CORE_LOGIC" LAYER="1" ORDER="1">
+      <contract>
+        <purpose>Markdown → DOCX через python-docx с полным форматированием</purpose>
+        <inputs>
+          <param name="markdown" type="str" />
+          <param name="output_path" type="str | None" />
+        </inputs>
+        <outputs>
+          <param name="docx_path" type="str" />
+        </outputs>
+        <errors>
+          <error code="ConversionError">Ошибка парсинга или генерации DOCX</error>
+        </errors>
+        <notes>Поддерживает: заголовки h1-h4, bold, italic, code, таблицы, bullet lists, вложенные списки, ссылки</notes>
+      </contract>
+      <interface>
+        <export-markdown_to_docx PURPOSE="Конвертировать Markdown в DOCX файл" />
+      </interface>
+      <depends>none</depends>
+    </M-CONVERTER>
+
+    <M-GDRIVE NAME="GDrive" TYPE="INTEGRATION" LAYER="1" ORDER="2">
+      <contract>
+        <purpose>Upload DOCX → Google Drive с конвертацией в Google Doc</purpose>
+        <inputs>
+          <param name="creds" type="Credentials" />
+          <param name="docx_path" type="str" />
+          <param name="title" type="str" />
+          <param name="folder_id" type="str | None" />
+        </inputs>
+        <outputs>
+          <param name="result" type="dict">doc_id, url, title</param>
+        </outputs>
+        <errors>
+          <error code="HttpError">Google API ошибка</error>
+        </errors>
+      </contract>
+      <interface>
+        <export-upload_as_gdoc PURPOSE="Загрузить DOCX и конвертировать в Google Doc" />
+        <export-update_gdoc PURPOSE="Обновить существующий Google Doc" />
+        <export-list_gdocs PURPOSE="Найти Google Docs по запросу" />
+      </interface>
+      <depends>M-AUTH</depends>
+    </M-GDRIVE>
+
+    <M-SERVER NAME="Server" TYPE="ENTRY_POINT" LAYER="2" ORDER="1">
+      <contract>
+        <purpose>MCP-сервер на stdio transport с тремя tools</purpose>
+        <inputs>
+          <param name="tool_calls" type="MCP protocol" />
+        </inputs>
+        <outputs>
+          <param name="tool_results" type="JSON" />
+        </outputs>
+      </contract>
+      <interface>
+        <export-markdown_to_gdoc PURPOSE="Tool: Markdown → Google Doc" />
+        <export-update_google_doc PURPOSE="Tool: обновить Google Doc" />
+        <export-list_google_docs PURPOSE="Tool: поиск документов" />
+        <export-main PURPOSE="Точка входа" />
+      </interface>
+      <depends>M-AUTH, M-CONVERTER, M-GDRIVE</depends>
+    </M-SERVER>
+  </Modules>
+
+  <DataFlow>
+    <DF-CREATE-DOC NAME="Создание Google Doc из Markdown" TRIGGER="tool call: markdown_to_gdoc">
+      <step-1>Агент вызывает tool с markdown и title</step-1>
+      <step-2>M-AUTH проверяет/обновляет OAuth токен</step-2>
+      <step-3>M-CONVERTER парсит Markdown → генерирует DOCX в temp</step-3>
+      <step-4>M-GDRIVE загружает DOCX на Drive с mimeType: application/vnd.google-apps.document</step-4>
+      <step-5>Google конвертирует DOCX → Google Doc</step-5>
+      <step-6>Возвращаем { url, doc_id, title }, удаляем temp файл</step-6>
+    </DF-CREATE-DOC>
+
+    <DF-UPDATE-DOC NAME="Обновление Google Doc" TRIGGER="tool call: update_google_doc">
+      <step-1>Агент вызывает tool с doc_id и markdown</step-1>
+      <step-2>M-AUTH проверяет/обновляет OAuth токен</step-2>
+      <step-3>M-CONVERTER генерирует DOCX</step-3>
+      <step-4>M-GDRIVE обновляет файл через Drive API (новая ревизия)</step-4>
+      <step-5>Возвращаем { url, doc_id, title }</step-5>
+    </DF-UPDATE-DOC>
+  </DataFlow>
+
+  <ImplementationOrder>
+    <Phase-1 name="Auth + Converter" status="done">
+      <step-1 module="M-AUTH">OAuth2 flow + кэширование токена</step-1>
+      <step-2 module="M-CONVERTER">Markdown → DOCX конвертер</step-2>
+    </Phase-1>
+    <Phase-2 name="Google Drive" status="done">
+      <step-1 module="M-GDRIVE">Upload, update, list через Drive API</step-1>
+    </Phase-2>
+    <Phase-3 name="MCP Server" status="done">
+      <step-1 module="M-SERVER">FastMCP обёртка с 3 tools</step-1>
+    </Phase-3>
+    <Phase-4 name="Integration" status="in-progress">
+      <step-1>Подключение к Claude Code</step-1>
+      <step-2>End-to-end тест с резюме Григория</step-2>
+    </Phase-4>
+  </ImplementationOrder>
+</DevelopmentPlan>

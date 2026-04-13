@@ -1,0 +1,10 @@
+credentials/
+*.pyc
+__pycache__/
+.venv/
+dist/
+*.egg-info/
+token.json
+client_secret*.json
+*.docx
+test_*.py

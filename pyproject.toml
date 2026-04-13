@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-gdocs"
+version = "0.1.0"
+description = "MCP server for creating Google Docs from Markdown"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "python-docx>=1.0.0",
+    "mistune>=3.0.0",
+    "google-api-python-client>=2.0.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.0.0",
+]
+
+[project.scripts]
+mcp-gdocs = "mcp_gdocs.server:main"

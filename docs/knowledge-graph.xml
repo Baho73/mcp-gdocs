@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KnowledgeGraph>
+  <Project NAME="mcp-gdocs" VERSION="0.1.0">
+    <keywords>MCP, Google Docs, Google Drive, Markdown, DOCX, python-docx, OAuth2, agent tools</keywords>
+    <annotation>MCP-сервер для конвертации Markdown в Google Docs с форматированием: создание, обновление и поиск документов через Google Drive API</annotation>
+
+    <M-AUTH NAME="Auth" TYPE="UTILITY">
+      <purpose>OAuth2 авторизация Google, кэширование токенов</purpose>
+      <path>src/mcp_gdocs/auth.py</path>
+      <depends>none</depends>
+      <annotations>
+        <fn-get_credentials PURPOSE="Получить валидные Google API credentials, обновить или переавторизоваться при необходимости" />
+      </annotations>
+    </M-AUTH>
+
+    <M-CONVERTER NAME="Converter" TYPE="CORE_LOGIC">
+      <purpose>Markdown → DOCX через python-docx с полным форматированием</purpose>
+      <path>src/mcp_gdocs/converter.py</path>
+      <depends>none</depends>
+      <annotations>
+        <fn-markdown_to_docx PURPOSE="Конвертировать Markdown строку в DOCX файл с заголовками, таблицами, списками, inline форматированием" />
+        <fn-_apply_inline_formatting PURPOSE="Парсить inline markdown (bold, italic, code, links) и добавлять форматированные runs в параграф" />
+      </annotations>
+    </M-CONVERTER>
+
+    <M-GDRIVE NAME="GDrive" TYPE="INTEGRATION">
+      <purpose>Upload DOCX → Google Drive с конвертацией в Google Doc</purpose>
+      <path>src/mcp_gdocs/gdrive.py</path>
+      <depends>M-AUTH</depends>
+      <annotations>
+        <fn-upload_as_gdoc PURPOSE="Загрузить DOCX на Drive и конвертировать в Google Doc" />
+        <fn-update_gdoc PURPOSE="Обновить содержимое существующего Google Doc" />
+        <fn-list_gdocs PURPOSE="Найти Google Docs по запросу" />
+      </annotations>
+    </M-GDRIVE>
+
+    <M-SERVER NAME="Server" TYPE="ENTRY_POINT">
+      <purpose>MCP-сервер на stdio transport, регистрация tools для агентных систем</purpose>
+      <path>src/mcp_gdocs/server.py</path>
+      <depends>M-AUTH, M-CONVERTER, M-GDRIVE</depends>
+      <annotations>
+        <fn-markdown_to_gdoc PURPOSE="MCP tool: Markdown → Google Doc, возврат ссылки" />
+        <fn-update_google_doc PURPOSE="MCP tool: обновить содержимое существующего Google Doc" />
+        <fn-list_google_docs PURPOSE="MCP tool: найти документы по запросу" />
+        <fn-main PURPOSE="Точка входа MCP сервера (stdio transport)" />
+      </annotations>
+    </M-SERVER>
+
+    <CrossLink from="M-SERVER" to="M-CONVERTER" relation="конвертирует markdown в docx" />
+    <CrossLink from="M-SERVER" to="M-GDRIVE" relation="загружает docx на Google Drive" />
+    <CrossLink from="M-SERVER" to="M-AUTH" relation="получает credentials через _get_creds()" />
+    <CrossLink from="M-GDRIVE" to="M-AUTH" relation="использует credentials для API вызовов" />
+  </Project>
+</KnowledgeGraph>
